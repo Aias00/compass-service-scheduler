@@ -113,11 +113,20 @@ def run_single_repo_workflow(repo_url, extra_payload={}):
     max_retries = 5
     retry_interval = 15  # seconds
     for attempt in range(max_retries):
-        response = requests.post(
-            f"{config.get('DEFAULT_HOST')}/api/workflows",
-            json=json_data,
-            timeout=HTTP_TIMEOUT,
-        )
+        try:
+            response = requests.post(
+                f"{config.get('DEFAULT_HOST')}/api/workflows",
+                json=json_data,
+                timeout=HTTP_TIMEOUT,
+            )
+        except requests.RequestException as error:
+            logger.warning(
+                f"Request failed with {error!r}. Retrying in {retry_interval} seconds..."
+            )
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(retry_interval)
+            continue
         if response.status_code >= 200 and response.status_code < 300:
             break
         else:
