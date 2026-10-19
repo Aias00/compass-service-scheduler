@@ -18,6 +18,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+HTTP_TIMEOUT = (10, 30)
+
 def basic_publish(queue, message, url_params):
     params = pika.URLParameters(url_params)
     params.socket_timeout = 15
@@ -111,7 +113,11 @@ def run_single_repo_workflow(repo_url, extra_payload={}):
     max_retries = 5
     retry_interval = 15  # seconds
     for attempt in range(max_retries):
-        response = requests.post(f"{config.get('DEFAULT_HOST')}/api/workflows", json=json_data, verify=False)
+        response = requests.post(
+            f"{config.get('DEFAULT_HOST')}/api/workflows",
+            json=json_data,
+            timeout=HTTP_TIMEOUT,
+        )
         if response.status_code >= 200 and response.status_code < 300:
             break
         else:
@@ -201,9 +207,11 @@ def load_yaml_template(url):
     uri = urlparse(url)
     domain_name = tldextract.extract(uri.netloc).domain
     if domain_name in ['gitee', 'gitcode']:
-        return yaml.safe_load(requests.get(url, allow_redirects=True).text)
+        return yaml.safe_load(requests.get(url, allow_redirects=True, timeout=HTTP_TIMEOUT).text)
     else:
-        return yaml.safe_load(requests.get(url, allow_redirects=True, proxies=proxies).text)
+        return yaml.safe_load(
+            requests.get(url, allow_redirects=True, proxies=proxies, timeout=HTTP_TIMEOUT).text
+        )
 
 
 
