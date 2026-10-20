@@ -154,7 +154,7 @@ def extract(self, *args, **kwargs):
                     'status': False,
                     'message': message
                 }
-                requests.post(callback['hook_url'], json=callback['params'])
+                requests.post(callback['hook_url'], json=callback['params'], timeout=tools.HTTP_TIMEOUT)
         raise Exception(f"no support project from {url}")
 
     params['project_url'] = tools.normalize_url(url)
@@ -231,7 +231,7 @@ def extract_group(self, *args, **kwargs):
             if callback['params'].get("callback_type", "") != "tpc_software_callback":
                 callback['params']['password'] = config.get('HOOK_PASS')
                 callback['params']['result'] = {'task': self.name, 'status': False, 'message': message}
-                requests.post(callback['hook_url'], json=callback['params'])
+                requests.post(callback['hook_url'], json=callback['params'], timeout=tools.HTTP_TIMEOUT)
         raise Exception(f"no support project from {url}")
 
     project_yaml_url = tools.normalize_url(url)
@@ -1262,13 +1262,13 @@ def notify(*args, **kwargs):
             callback['params']['password'] = config.get('HOOK_PASS')
             callback['params']['domain'] = params['domain_name']
             callback['params']['result'] = {'status': True, 'message': f"The analysis you submitted has been completed, and the address of the analysis report is: Report Link: {report_url}"}
-            resp = requests.post(callback['hook_url'], json=callback['params'])
+            resp = requests.post(callback['hook_url'], json=callback['params'], timeout=tools.HTTP_TIMEOUT)
             return {'status': True, 'code': resp.status_code, 'message': resp.text}
         else:
             callback['params']['project_url'] = target + ".git"
             callback['params']['command_list'] = ["compass"]
             callback['params']['scan_results'] = { "compass": { "status": True } }
-            resp = requests.post(callback['hook_url'], json=callback['params'])
+            resp = requests.post(callback['hook_url'], json=callback['params'], timeout=tools.HTTP_TIMEOUT)
             return {'status': True, 'code': resp.status_code, 'message': resp.text}
     else:
         return {'status': False, 'message': 'no callback'}
@@ -1295,7 +1295,8 @@ def license(*args, **kwargs):
             response = requests.post(
                 f"{TPC_SERVICE_API_ENDPOINT}/{request_path}",
                 json=payload,
-                headers=headers
+                headers=headers,
+                timeout=tools.HTTP_TIMEOUT
             )
             response.raise_for_status()
             resp_data = response.json()
@@ -1458,7 +1459,8 @@ def opencheck_raw(*args, **kwargs):
             response = requests.post(
                 f"{TPC_SERVICE_API_ENDPOINT}/{request_path}",
                 json=payload,
-                headers=headers
+                headers=headers,
+                timeout=tools.HTTP_TIMEOUT
             )
             response.raise_for_status()
             resp_data = response.json()
